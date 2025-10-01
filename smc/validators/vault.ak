@@ -1,6 +1,4 @@
-use aiken/builtin
 use aiken/collection/list
-use aiken/option
 use cardano/address.{Address, Credential, Script}
 use cardano/assets.{AssetName, PolicyId}
 use cardano/transaction.{Datum, Input, Output, OutputReference, Transaction}
@@ -47,7 +45,9 @@ validator vault {
           )
         |> list.foldr(0, fn(q, acc) { acc + q })
 
-    qty_out >= qty_in && qty_in > 0
+    let signer_ok = list.has(self.extra_signatories, config.owner)
+
+    signer_ok && qty_out >= qty_in && qty_in > 0
   }
 
   else(_) {

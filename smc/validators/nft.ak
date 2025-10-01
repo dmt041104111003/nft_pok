@@ -26,7 +26,23 @@ validator nft_policy {
         _ -> False
       }
 
-    signed_by_owner && exactly_one_nft
+    let goes_to_vault =
+      when minted_tokens is {
+        [(asset_name, _)] ->
+          self.outputs
+            |> list.any(
+                fn(out) {
+                  out.address.payment_credential == config.vault && assets.quantity_of(
+                    out.value,
+                    policy_id,
+                    asset_name,
+                  ) == 1
+                },
+              )
+        _ -> False
+      }
+
+    signed_by_owner && exactly_one_nft && goes_to_vault
   }
 
   else(_) {
