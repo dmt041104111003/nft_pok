@@ -1,10 +1,14 @@
 use aiken/collection/list
+use aiken/crypto.{VerificationKeyHash}
 use cardano/address.{Address, Credential, Script}
 use cardano/assets.{AssetName, PolicyId}
 use cardano/transaction.{Datum, Input, Output, OutputReference, Transaction}
-use config
 
-validator vault {
+validator vault(
+  owner: VerificationKeyHash,
+  policy_id: PolicyId,
+  asset_name: AssetName,
+) {
   spend(
     _datum: Option<Data>,
     _redeemer: Data,
@@ -22,9 +26,7 @@ validator vault {
       }
 
     let nft_qty_in =
-      fn(v) {
-        assets.quantity_of(v, config.nft_policy_id, config.nft_asset_name)
-      }
+      fn(v) { assets.quantity_of(v, policy_id, asset_name) }
 
     let qty_in = nft_qty_in(self_input.output.value)
 
@@ -45,7 +47,7 @@ validator vault {
           )
         |> list.foldr(0, fn(q, acc) { acc + q })
 
-    let signer_ok = list.has(self.extra_signatories, config.owner)
+    let signer_ok = list.has(self.extra_signatories, owner)
 
     signer_ok && qty_out >= qty_in && qty_in > 0
   }
